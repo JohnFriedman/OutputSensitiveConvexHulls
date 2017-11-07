@@ -23,6 +23,8 @@ h represents the number of vertices in the convex hull of the input.
 This is where "Output Sensative" comes from.
 
 Design:
+Drawing of design is in the Visual Design.jpeg
+
 Have point placement phase with 2 options.
 1. Randomly Generated Points
 2. User Placed Points
