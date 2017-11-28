@@ -14,24 +14,26 @@ function addPoint(event)
 	context.stroke();
 }
 
-function startSim()
+var lines = [];
+var numLines = 0;
+var p = 1;
+
+function oneStep()
 {
-	
 	if(points.length >= 3)
 	{
-		var lines = [];
-		var numLines = 0;
-		for(var p = 1; p < points.length; p++)
+		if(p < points.length)
 		{
 			lines.push({p1: points[p - 1], p2: points[p]});
 		}
-		lines.push({p1: points[points.length - 1], p2: points[0]});
+		else
+			lines.push({p1: points[points.length - 1], p2: points[0]});
 		var canvas = document.getElementById('canvas');
 		var context = canvas.getContext('2d');
 		context.fillStyle = 'red';
 		
-		var iteration = 0;
-		var timeOfLastDrawing = Date.now();
+		//var iteration = 0;
+		//var timeOfLastDrawing = Date.now();
 		window.requestAnimationFrame
 		(
 			function clear()
