@@ -12,14 +12,20 @@
 </style>
 </head>
 <body>
-	Click inside area to create points, then click 
+	Click inside area to create points, or generate random points, then run simulation.
+	<br/>
+	<form>
+		<button type = "button" id="genPoints" onclick="generatePoints(this.form.numPoints.value)"> Generate Points </button>
+		&nbsp &nbsp
+		<input type="text" id="numPointsID" name="numPoints" value="30">
+	</form>
 	<button type = "button" id="simStart" onclick="startSim()"> Start Simulation </button>
 	&nbsp &nbsp
 	<button type = "button" id="oneStep" onclick="oneStep()"> One Step </button>
 	&nbsp &nbsp
 	<button type = "button" id="simReset" onClick="window.location.reload()"> Reset Simulation </button>
 	<br/>
-	<canvas id="canvas" onclick="addPoint(event)" width=400 height=400></canvas>
+	<canvas id="canvas" onclick="clickPoint(event)" width=400 height=400></canvas>
 </body>
 </html>
 
