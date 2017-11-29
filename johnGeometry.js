@@ -42,6 +42,11 @@ function addPoint(x, y)
 	context.stroke();
 }
 
+function ccw(a, b, c)
+{
+	return Math.sign((b.x - a.x) * (c.y - a.y) - (c.x - a.x) * (b.y - a.y));
+}
+
 var lines = [];
 var numLines = 0;
 
