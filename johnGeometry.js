@@ -1,6 +1,7 @@
 var points = [];
 var canvas;
 var context;
+var numLines;
 
 function generatePoints(n)
 {
@@ -17,7 +18,8 @@ function generatePoints(n)
 		{
 			var x = 15 + Math.floor(Math.random() * (width - 30));
 			var y = 15 + Math.floor(Math.random() * (height - 30));
-			addPoint(x, y);
+			points.push({x: x, y: y});
+			drawPoint(x, y);
 		}
 	}
 }
@@ -30,25 +32,59 @@ function clickPoint(event)
 	canvas = document.getElementById('canvas');
 	context = canvas.getContext('2d');
 	context.fillStyle = 'red';
-	addPoint(x, y);
+	points.push({x: x, y: y});
+	drawPoint(x, y);
+	numLines = 0;
 }
 
-function addPoint(x, y)
+function drawPoint(x, y)
 {
-	points.push({x: x, y: y});
 	context.beginPath();
 	context.arc(x, y, 3, 2 * Math.PI, false);
 	context.fill();
 	context.stroke();
 }
 
+function drawAllPoints()
+{
+	for(var i = 0; i < points.length; i++)
+		drawPoint(points[i].x, points[i].y);
+}
+
+var chPoints = [];
+
+function jarvis()
+{
+	chPoints = [];
+	var n = points.length;
+	var left = 0;
+	for(var i = 1; i < n; i++)
+	{
+		if(points[i].x < points[left].x)
+			left = i;
+	}
+	var a = left;
+	var b;
+	do
+	{
+		b = (a + 1) % n;
+		for(var i = 0; i < n; i++)
+		{
+			if(ccw(points[a], points[i], points[b]) === 1)
+				b = i;
+		}
+		chPoints.push(points[b]);
+		a = b;
+	}
+	while(a != left);
+}
+
 function ccw(a, b, c)
 {
-	return Math.sign((b.x - a.x) * (c.y - a.y) - (c.x - a.x) * (b.y - a.y));
+	return Math.sign((b.y - a.y) * (c.x - b.x) - (b.x - a.x) * (c.y - b.y));
 }
 
 var lines = [];
-var numLines = 0;
 
 function startSim()
 {
@@ -56,6 +92,9 @@ function startSim()
 		alert("Not enough points!")
 	else
 	{
+		numLines = 0;
+		clearLines();
+		jarvis();
 		organizeLines();
 		window.requestAnimationFrame(fullSim);
 	}
@@ -68,7 +107,10 @@ function oneStep()
 	else
 	{
 		if(lines.length === 0)
+		{
+			jarvis();
 			organizeLines();
+		}
 		if(numLines === lines.length)
 			alert("All lines drawn!");
 		else
@@ -79,9 +121,9 @@ function oneStep()
 function organizeLines()
 {	
 	lines = [];
-	for(var p = 1; p < points.length; p++)
-		lines.push({p1: points[p-1], p2: points[p]});
-	lines.push({p1: points[points.length - 1], p2: points[0]});
+	for(var p = 1; p < chPoints.length; p++)
+		lines.push({p1: chPoints[p-1], p2: chPoints[p]});
+	lines.push({p1: chPoints[chPoints.length - 1], p2: chPoints[0]});
 }
 
 function next()
@@ -102,4 +144,11 @@ function fullSim()
 	next();
 	if(numLines < lines.length)
 		window.requestAnimationFrame(fullSim);
+}
+
+function clearLines()
+{
+	context.clearRect(0, 0, 400, 400);
+	drawAllPoints();
+	numLines = 0;
 }
