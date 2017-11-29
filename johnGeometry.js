@@ -1,12 +1,15 @@
 var points = [];
+var canvas;
+var context;
+
 function addPoint(event)
 {
 	var x = event.offsetX;
 	var y = event.offsetY;
 	console.log("x: " + x + " y: " + y);
-	points.push({x: event.x, y: y});
-	var canvas = document.getElementById('canvas');
-	var context = canvas.getContext('2d');
+	points.push({x: x, y: y});
+	canvas = document.getElementById('canvas');
+	context = canvas.getContext('2d');
 	context.fillStyle = 'red';
 	context.beginPath();
 	context.arc(x, y, 3, 2 * Math.PI, false);
@@ -26,36 +29,17 @@ function startSim()
 			lines.push({p1: points[p - 1], p2: points[p]});
 		}
 		lines.push({p1: points[points.length - 1], p2: points[0]});
-		var canvas = document.getElementById('canvas');
-		var context = canvas.getContext('2d');
-		context.fillStyle = 'red';
 		
-		var iteration = 0;
+		var iteration = -1;
 		var timeOfLastDrawing = Date.now();
-		window.requestAnimationFrame
-		(
-			function clear()
-			{
-				context.clearRect(0, 0, 400, 400)
-			}
-		)
 		window.requestAnimationFrame
 		(
 			function loop() 
 			{
-				while (Date.now() < timeOfLastDrawing + 500) 
-				{}
+				while (Date.now() < timeOfLastDrawing + 500) {}
 			  	timeOfLastDrawing = Date.now();
 			  	iteration++;
 			  	//context.clearRect(0, 0, 400, 400);
-			  	for (var i = 0; i < points.length; i++) 
-				{
-					var current = points[i];
-					context.beginPath();
-					context.arc(current.x, current.y, 3, 2 * Math.PI, false);
-					context.fill();
-					context.stroke();
-				}
 				for (i = lines.length - 1; i >= 0; i--)
 				{
 					if (i !== iteration % lines.length) 
