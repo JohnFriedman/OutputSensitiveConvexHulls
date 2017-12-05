@@ -1,21 +1,17 @@
 var points = [];
-points.push({x: 30, y: 30});
-points.push({x: 300, y: 200});
-points.push({x: 200, y: 300});
-
 var lines = [];
-lines.push({p1: points[0], p2: points[1]});
-lines.push({p1: points[1], p2: points[2]});
-lines.push({p1: points[2], p2: points[0]});
 
 
 var canvas = document.getElementById('canvas');
 var context = canvas.getContext('2d');
 context.fillStyle = 'black';
 
+
+
 var iteration = 0;
 var timeOfLastDrawing = Date.now();
 window.requestAnimationFrame(function loop() {
+  compute()
   while (Date.now() < timeOfLastDrawing + 500) { var i = 1; }
   timeOfLastDrawing = Date.now();
   iteration += 1;
