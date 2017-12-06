@@ -4,23 +4,23 @@ Introduction:
 The scope of this project is to visualize an output sensative convex hull algorithm running in O(nlogh).
 
 Convexity: 
-At set X in R-d is convex if for all x and y in X, the line created by x and y is in X.
+A set X in R-d is convex if for all x and y in X, the line created by x and y is in X.
 
 Convex Hull:
 The sequence of points in a set P describing the minimal convex polygon containing all points in P.
 
 Languages and Tools:
 We chose to create a web based visualization.
-This means we will use javascript and HTML, and canvas.
+This means we will use javascript, HTML, and canvas.
 A basic proof of concept of working with the visualization tools is included.
 
 Algorithm:
 This project focuses on visualizing an O(nlogh) algorithm for finding convex hulls.
 We decided to visualize chan's algorithm.
-It combines a standard O(nlogn) algorithm with the Jarvis's march algorithm.
+It combines a standard O(nlogn) algorithm (Graham Scan) with the Jarvis's march algorithm.
 This algorithm's time complexity depends on the size of the solution through h.
 h represents the number of vertices in the convex hull of the input.
-This is where "Output Sensative" comes from.
+This is where "Output Sensitive" comes from.
 
 Design:
 Drawing of design is in the Visual Design.jpeg
