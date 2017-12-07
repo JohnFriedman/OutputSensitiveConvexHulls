@@ -285,6 +285,9 @@ function nextStep() {
         if (best === convexHull[0]) {
             algorithmStep = 7;
         } else if (h > m) {
+            leftTangents = [];
+            leftTangentIndices = [];
+            leftTangentsSplits = [];
             algorithmStep = 0;
         } else {
             leftTangents = [];
