@@ -401,27 +401,31 @@ function nextStep() {
         n = points.length;
         t = t + 1;
         m = Math.min(Math.pow(2, Math.pow(2, t)), n);
-        var numberOfPartitions = Math.ceil(n / m);
-        var sizeOfPartitions = Math.ceil(n / numberOfPartitions);
-        var k = (Math.ceil(n / sizeOfPartitions) * sizeOfPartitions) - n;
-        //k is number of partitions with 1 less that sizeOfPartitions
 
-        var incrementerForPartitions = 0;
+        var numberOfPartitions = Math.ceil(n / m);
+        var counts = [];
         for (var i = 0; i < numberOfPartitions; i++) {
+            counts.push(0);
+        }
+        var whichPartition = 0;
+        for (var i = 0; i < n; i++) {
+            counts[whichPartition] = counts[whichPartition] + 1;
+            whichPartition++;
+            if (whichPartition === counts.length) {
+                whichPartition = 0;
+            }
+        }
+        var incrementerForPartitions = 0;
+        for (var i = 0; i < counts.length; i++) {
             var temp = [];
-            if (i < k) {
-                for (var j = 0; j < m - 1; j++) {
-                    temp.push(points[incrementerForPartitions]);
-                    incrementerForPartitions++;
-                }
-            } else {
-                for (var j = 0; j < m; j++) {
-                    temp.push(points[incrementerForPartitions]);
-                    incrementerForPartitions++;
-                }
+            for (var j = 0; j < counts[i]; j++) {
+                temp.push(points[incrementerForPartitions]);
+                incrementerForPartitions++;
             }
             splits.push(temp);
         }
+        console.log(counts);
+        
         algorithmStep = 1;
     }
 }
