@@ -2,6 +2,8 @@ var points = [];
 var canvas;
 var context;
 
+var clickToAddPoints = true;
+
 function generatePoints(n)
 {
 	if(n > 1000)
@@ -25,6 +27,9 @@ function generatePoints(n)
 
 function clickPoint(event)
 {
+	if (!clickToAddPoints) {
+		return;
+	}
 	var x = event.offsetX;
 	var y = event.offsetY;
 	console.log("x: " + x + " y: " + y);
@@ -38,7 +43,7 @@ function clickPoint(event)
 function drawPoint(x, y)
 {
 	context.beginPath();
-	context.arc(x, y, 3, 2 * Math.PI, false);
+	context.arc(x, y, 2, 2 * Math.PI, false);
 	context.fill();
 	context.stroke();
 }
@@ -48,7 +53,7 @@ function drawAllPoints()
 //	for(var i = 0; i < points.length; i++)
 //		drawPoint(points[i].x, points[i].y);
     colorList = [];
-    colorList.push("black");
+    colorList.push("olive");
     colorList.push("red");
     colorList.push("yellow");
     colorList.push("blue");
@@ -62,7 +67,7 @@ function drawAllPoints()
     colorList.push("violet");
     colorList.push("silver");
     colorList.push("teal");
-    colorList.push("olive");
+    colorList.push("black");
     for (var i = 0; i < splits.length; i++){
         context.fillStyle = colorList[i % colorList.length];
         for (var j = 0; j < splits[i].length; j++) {
@@ -82,9 +87,34 @@ var linesInConsideration = [];
 var splits = [];
 var splitsConvexHulls = [];
 var currentGrahamStack = [];
+var convexHull = [];
+var jarvisCurrentPoint;
+var algorithmStep = 0;
+var leftTangents = [];
 
 function drawAllLines() {
     console.log(currentGrahamStack);
+    for (var i = 0; i < convexHull.length - 1; i++) {
+        context.strokeStyle = 'red';
+        var current1 = convexHull[i];
+        var current2 = convexHull[i + 1];
+        context.beginPath();
+        context.moveTo(current1.x, current1.y);
+        context.lineTo(current2.x, current2.y);
+        context.stroke();
+        context.strokeStyle = 'black';
+    }
+    if (algorithmStep === 7) {
+        return;
+    }
+    if (leftTangents.length != 0) {
+        context.strokeStyle = 'green';
+        context.beginPath();
+        context.moveTo(jarvisCurrentPoint.x, jarvisCurrentPoint.y);
+        context.lineTo(leftTangents[leftTangents.length - 1].x, leftTangents[leftTangents.length - 1].y);
+        context.stroke();
+        context.strokeStyle = 'black';
+    }
     for(var i = 0; i < currentGrahamStack.length - 1; i++) {
         context.strokeStyle = 'red';
         var current1 = currentGrahamStack[i];
@@ -128,13 +158,15 @@ function drawAllLines() {
 }
 var t = 0;
 var m;
-var algorithmStep = 0;
 var n;
 var whichPartitionForGrahamScan = 0;
 // 0 is partition phase
 // 1 is graham scan preprocessing
 // 2 is graham scan pushing phase
 // 3 is graham scan popping phase
+// 4 is jarvis march setup
+// 5 is jarvis march try lines phase
+// 6 is jarvis march select line phase
 
 function grahamScansQuickSort(leftMost, array) {
     if (array.length < 2) {
@@ -168,6 +200,48 @@ function grahamScansQuickSort(leftMost, array) {
     return retList;
 }
 
+function getTangent(p, v)
+{
+    var n = v.length;
+    if(ccw(p, v[1], v[0]) === 1 && !(ccw(p, v[n-1], v[0]) === -1))
+        return 0;
+    var b;
+    var a;
+    for(a = 0, b = n;;)
+    {
+        var c = Math.floor((a + b) / 2);
+        var cBelow = ccw(p, v[(c + 1) % n], v[c]);
+        if(cBelow === 1 && !(ccw(p, v[(c - 1 + n) % n], v[c]) === -1))
+            return c;
+        //no found yet
+        var aAbove = ccw(p, v[(a + 1) % n], v[a]);
+        if(aAbove === -1)
+        {
+            if(cBelow === 1)
+                b = c;
+            else
+            {
+                if(ccw(p, v[a], v[c]) === -1)
+                    b = c;
+                else
+                    a = c;
+            }
+        }
+        else
+        {
+            if(!(cBelow === 1))
+                a = c;
+            else
+            {
+                if(ccw(p, v[a], v[c]) === 1)
+                    b = c;
+                else
+                    a = c;
+            }
+        }
+    }
+}
+
 function getIndexOfLeftmost(list) {
     var currentIndex = 0;
     for (var i = 1; i < list.length; i++) {
@@ -181,9 +255,91 @@ function getIndexOfLeftmost(list) {
 var currentLeftmost;
 var currentSortedByAngleFromLeftmost;
 var currentGrahamIncrementer;
+
+
+var jarvisCurrentSplit;
+var jarvisCurrentIndex;
+var h;
+var jarvisIterator;
+var leftTangentsIndices;
+var leftTangentsSplits;
+
 function nextStep() {
     console.log("algorithmStep = " + algorithmStep);
-    if (algorithmStep === 3) {
+    if (algorithmStep === 6) {
+        var best = leftTangents[0];
+        var bestIndex = leftTangentsIndices[0];
+        var bestSplit = leftTangentsSplits[0];
+        for (var i = 1; i < leftTangents.length; i++) {
+            if (ccw(jarvisCurrentPoint, best, leftTangents[i]) > 0) {
+                best = leftTangents[i];
+                bestIndex = leftTangentsIndices[i];
+                bestSplit = leftTangentsSplits[i];
+            }
+        }
+        convexHull.push(best);
+        jarvisCurrentPoint = best;
+        jarvisCurrentIndex = bestIndex;
+        jarvisCurrentSplit = bestSplit;
+        h++;
+        if (best === convexHull[0]) {
+            algorithmStep = 7;
+        } else if (h > m) {
+            algorithmStep = 0;
+        } else {
+            leftTangents = [];
+            leftTangentsIndices = [];
+            leftTangentsSplits = [];
+            algorithmStep = 5;
+        }
+        
+    } else if (algorithmStep === 5) {
+        console.log("checking split number " + jarvisIterator);
+        if (jarvisIterator === jarvisCurrentSplit) {
+            var currentHull = splitsConvexHulls[jarvisIterator];
+            leftTangentsIndices.push(((jarvisCurrentIndex - 1) + currentHull.length) % currentHull.length);
+            leftTangents.push(currentHull[((jarvisCurrentIndex - 1) + currentHull.length) % currentHull.length]);
+            leftTangentsSplits.push(jarvisIterator);
+        } else {
+            console.log("JarvisCurrentPoint: x: " + jarvisCurrentPoint.x + " y: " + jarvisCurrentPoint.y);
+            var thisLeftTangentIndex = getTangent(jarvisCurrentPoint, splitsConvexHulls[jarvisIterator]);
+            console.log("Index of tangent is " + thisLeftTangentIndex);
+            leftTangentsIndices.push(thisLeftTangentIndex);
+            leftTangents.push(splitsConvexHulls[jarvisIterator][thisLeftTangentIndex]);
+            leftTangentsSplits.push(jarvisIterator);
+        }
+        console.log("adding point x = " + leftTangents[leftTangents.length - 1].x + " y = " + leftTangents[leftTangents.length - 1].y);
+        jarvisIterator++;
+        if (jarvisIterator === splitsConvexHulls.length) {
+            jarvisIterator = 0;
+            algorithmStep = 6;
+        }
+    } else if (algorithmStep === 4) {
+        var splitContainingLeftmost = 0;
+        var leftmostPoint = splitsConvexHulls[0][0];
+        for(var i = 1; i < splitsConvexHulls.length; i++)
+        {
+            var pointConsidered = splitsConvexHulls[i][0];
+            var xOfPointConsidered = pointConsidered.x;
+            var xOfLeftmost = leftmostPoint.x;
+            if(xOfPointConsidered < xOfLeftmost)
+            {
+                splitContainingLeftmost = i;
+                leftmostPoint = splitsConvexHulls[i][0];
+            }
+        }
+        jarvisCurrentPoint = leftmostPoint;
+        jarvisCurrentSplit = splitContainingLeftmost;
+        jarvisCurrentIndex = 0;
+        jarvisIterator = 0;
+        leftTangents = [];
+        leftTangentsIndices = [];
+        leftTangentsSplits = [];
+        convexHull = [];
+        convexHull.push(leftmostPoint);
+        h = 1;
+        algorithmStep = 5;
+    } else if (algorithmStep === 3) {
         var l = currentGrahamStack.length;
         var stack = currentGrahamStack;
         if (ccw(stack[l - 3], stack[l - 2], stack[l - 1]) < 0) {
@@ -198,6 +354,7 @@ function nextStep() {
                 whichPartitionForGrahamScan++;
                 if (whichPartitionForGrahamScan === splits.length) {
                     //This means we have done graham scan on all partitions
+                    currentGrahamStack = [];
                     algorithmStep = 4;
                 } else {
                     algorithmStep = 1;
@@ -233,14 +390,24 @@ function nextStep() {
         currentGrahamIncrementer = 1;
         algorithmStep = 2;
     } else if (algorithmStep === 0) {
+        whichPartitionForGrahamScan = 0;
+        linesInConvexHull = [];
+        linesInConsideration = [];
+        splits = [];
+        splitsConvexHulls = [];
+        currentGrahamStack = [];
+        convexHull = [];
+        leftTangents = [];
         n = points.length;
         t = t + 1;
-        m = Math.pow(2, Math.pow(2, t));
-        var k = (Math.ceil(n / m) * m) - n;
-        //k is number of partitions of size m - 1
+        m = Math.min(Math.pow(2, Math.pow(2, t)), n);
+        var numberOfPartitions = Math.ceil(n / m);
+        var sizeOfPartitions = Math.ceil(n / numberOfPartitions);
+        var k = (Math.ceil(n / sizeOfPartitions) * sizeOfPartitions) - n;
+        //k is number of partitions with 1 less that sizeOfPartitions
 
         var incrementerForPartitions = 0;
-        for (var i = 0; i < Math.ceil(n / m); i++) {
+        for (var i = 0; i < numberOfPartitions; i++) {
             var temp = [];
             if (i < k) {
                 for (var j = 0; j < m - 1; j++) {
@@ -259,19 +426,6 @@ function nextStep() {
     }
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 var alreadyClickedOnce = false;
 
 function stepLoop() {
@@ -286,6 +440,7 @@ function initialize() {
 }
 
 function oneStep() {
+    clickToAddPoints = false;
     if(alreadyClickedOnce) {
         window.requestAnimationFrame(stepLoop);
     }
@@ -296,10 +451,11 @@ function oneStep() {
 }
 
 function startSim() {
+    clickToAddPoints = false;
     timeLast = Date.now();
     window.requestAnimationFrame(function loop() {
         nextStep();
-        while(Date.now() < timeLast + 500) {}
+        while(Date.now() < timeLast + 300) {}
         timeLast = Date.now();
         context.clearRect(0, 0, 400, 400);
         drawAllPoints();
